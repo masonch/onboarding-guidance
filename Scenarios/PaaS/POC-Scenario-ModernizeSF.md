@@ -6,6 +6,7 @@
 * [Create a Team Project and Repository](#create-a-team-project-and-initial-code)
 * [Configure Container Register](#configure-container-registry)
 * [Containerize the Application](#containerize-the-application)
+* [Create Service Fabric Solution](#create-service-fabric-solution)
 * [Create Service Fabric Cluster](#create-service-fabric-cluster)
 
 ## Introduction
@@ -90,5 +91,48 @@ The application as it exists today would be considered a traditional "monolithic
 
 
     ![Screenshot](Images/mod-sf-12.png)
+
+## Create Service Fabric Solution
+We will now create a Service Fabric project for our solution and configure it to pull the Docker image we just published.
+
+1. In Visual Studio, right-click the solution and click **Add** and then **New Project**. Choose **Service Fabric Application**, give it an appropriate name and click **Ok**.
+
+    ![Screenshot](Images/mod-sf-13.png)
+
+2. In the *New Service Fabric Service* dialog, give the image name based on your full container registry: e.g. *modapponsfdevcr.azurecr.io/contosoexpensesweb:20171030081652*. Provide a service name of **ContosoExpensesWeb**. Click **Ok**.
+
+    ![Screenshot](Images/mod-sf-14.png)
+
+3. In the *ServiceManifest.xml* file under *ContosoExpensesWebPkg*, edit the endpoint called *ContosoExpensesWebTypeEndpoint*.
+    ```xml
+    <Endpoint Name="ContosoExpensesWebTypeEndpoint" UriScheme="http" Port="8080" Protocol="http" />
+    ```
+4. In the *ApplicationManifest.xml* file make the following changes:
+    * Edit the instance count with the parameters to the following:
+        ```xml
+        <Parameters>
+            <Parameter Name="ContosoExpensesWeb_InstanceCount" DefaultValue="-1" />
+        </Parameters>
+        ```
+    * Edit the *ServiceManfiestImport* block to add the following element:
+        ```xml
+        <Policies>
+            <ContainerHostPolicies CodePackageRef="Code">
+                <RepositoryCredentials AccountName="modapponsfdevcr" Password="__YOUR_PASSWORD__" PasswordEncrypted="false"/>
+                <PortBinding ContainerPort="80" EndpointRef="ContosoExpensesWebTypeEndpoint"/>
+            </ContainerHostPolicies>
+        </Policies>
+        ```
+        > Note: The password you use here comes from password listed in the *Access Keys* section of the Azure Container Registry.
+    
+    ![Screenshot](Images/mod-sf-15.png)
+5. Right-click the Service Fabric project in Visual Studio and select **Properties**. In the properties dialog, select the Application URL property to **http://localhost:8080**. Click **Ok**.
+
+    ![Screenshot](Images/mod-sf-16.png)
+
+6. Right-click the Service Fabric project in Visual Studio and select **Set as Startup Project**.
+7. Right-click the solution and select **Configuration Manager**. In the configuration dialog, check the *Build* and *Deploy* boxes for the Service Fabric project. Click **Close**.
+
+    ![Screenshot](Images/mod-sf-17.png)
 
 ## Create Service Fabric Cluster
