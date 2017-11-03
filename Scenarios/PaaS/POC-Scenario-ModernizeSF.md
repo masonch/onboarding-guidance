@@ -5,9 +5,9 @@
 * [Prerequisites](#prerequisites)
 * [Create a Team Project and Repository](#create-a-team-project-and-initial-code)
 * [Configure Container Register](#configure-container-registry)
+* [Create Service Fabric Cluster](#create-service-fabric-cluster)
 * [Containerize the Application](#containerize-the-application)
 * [Create Service Fabric Solution](#create-service-fabric-solution)
-* [Create Service Fabric Cluster](#create-service-fabric-cluster)
 
 ## Introduction
 The goal of this POC is to walkthrough the process you would follow when it comes to migrating an existing application running on-premise to run in a Service Fabric cluster. You will start by creating a new .NET Core application, converting it to a containerized instance, deploying it to a registry, and then running the application within Service Fabric.
@@ -78,6 +78,28 @@ We will need a place to store the containers that we are creating for this appli
 
     ![Screenshot](Images/mod-sf-10.png)
 
+## Create Service Fabric Cluster
+In order to run the application now, we will need to create a cluster to deploy to.
+
+1. In the Azure portal, click **New**, search for **Service Fabric**, and then select **Service Fabric Cluster**. Click **Create**.
+
+    ![Screenshot](Images/mod-sf-18.png)
+2. On the *Basics* blade, fill in the appropriate information for the cluster and assign it to the resource group we have already created. Click **Ok**.
+    > Note: Make sure for *Operating system*, you choose **WindowsServer 2016-Datacenter- with-Containers**
+
+    ![Screenshot](Images/mod-sf-19.png)
+3. On the *Cluster configuration* blade, leave **Node type** as 1, then click to configure the node type. Provide the following details:
+    * **Node type name** - BaseNode
+    * **Durability tier** - Bronze
+    * **Virtual machine size** - Standard_D1_v2
+    * **Single node cluster** - Select check box
+    * **Custom endpoints** - 80,8080
+    * **Enable reverse proxy** - Select check box
+    
+    Click **Ok** then **Ok** again.
+4. On the *Security* blade, select **Unsecure** and then click **Ok**.
+5. On the *Summary* blade, click **Create**.
+    > Note: This will take several minutes and even once the creation of the cluster is complete, it will still need a few more minutes to perform some internal updates.
 
 ## Containerize the Application
 The application as it exists today would be considered a traditional "monolithic" application. We now need to containerize the application so it can work on Docker. With the Docker Tools for Windows, we can do some basic Docker scaffolding of our project.
@@ -126,13 +148,9 @@ We will now create a Service Fabric project for our solution and configure it to
         > Note: The password you use here comes from password listed in the *Access Keys* section of the Azure Container Registry.
     
     ![Screenshot](Images/mod-sf-15.png)
-5. Right-click the Service Fabric project in Visual Studio and select **Properties**. In the properties dialog, select the Application URL property to **http://localhost:8080**. Click **Ok**.
+5. Right-click the Service Fabric project in Visual Studio and select **Publish**.
+6. In the *Publish Service Fabric Application* dialog, select the Service Fabric instance you created earlier and then click **Publish**.
 
-    ![Screenshot](Images/mod-sf-16.png)
-
-6. Right-click the Service Fabric project in Visual Studio and select **Set as Startup Project**.
-7. Right-click the solution and select **Configuration Manager**. In the configuration dialog, check the *Build* and *Deploy* boxes for the Service Fabric project. Click **Close**.
-
-    ![Screenshot](Images/mod-sf-17.png)
-
-## Create Service Fabric Cluster
+    ![Screenshot](Images/mod-sf-20.png)
+7. Once the publish is complete, you can check the status of the deploying in the Service Fabric explorer (e.g. [http://modapponsf-dev-sf.eastus.cloudapp.azure.com:19080/Explorer/index.html#/](http://modapponsf-dev-sf.eastus.cloudapp.azure.com:19080/Explorer/index.html#/)).
+8. When the application is deployed you should be able to navigate to your URL (e.g. [modapponsf-dev-sf.eastus.cloudapp.azure.com:8080/](modapponsf-dev-sf.eastus.cloudapp.azure.com:8080/))
